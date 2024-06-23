@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+</head>
+<body>
+    <h2>Weather Forecast for {{ city }}</h2>
+    <ul>
+        {% for forecast in weather_data['list'] %}
+        <li>{{ forecast.dt_txt }}: {{ forecast.main.temp }}°C</li>
+        {% endfor %}
+    </ul>
+    <div id="chat-container">
+        <div class="chat-message bot">
+            <p>Welcome back! How can I assist you further?</p>
+        </div>
+    </div>
+    <input type="text" id="userInput" placeholder="Type your message...">
+    <button onclick="sendMessage()">Send</button>
+    <script>
+        function sendMessage() {
+            var userInput = document.getElementById("userInput").value;
+            var chatContainer = document.getElementById("chat-container");
+            var userMessage = document.createElement("div");
+            userMessage.className = "chat-message user";
+            userMessage.innerHTML = "<p>" + userInput + "</p>";
+            chatContainer.appendChild(userMessage);
+            document.getElementById("userInput").value = "";
+
+
+            fetch('/handle_query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var botMessage = document.createElement("div");
+                botMessage.className = "chat-message bot";
+                botMessage.innerHTML = "<p>" + data.response + "</p>";
+                chatContainer.appendChild(botMessage);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

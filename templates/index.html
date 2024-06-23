@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TravelBot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chatbox"></div>
+        <input type="text" id="user_input" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+        <div id="follow_up_buttons" style="display: none;">
+            <button onclick="getForecast('yes')">Yes</button>
+            <button onclick="getForecast('no')">No</button>
+        </div>
+    </div>
+    <script>
+        let currentLocation = '';
+
+        function sendMessage() {
+            const userInput = document.getElementById('user_input').value;
+            document.getElementById('user_input').value = '';
+
+            const chatbox = document.getElementById('chatbox');
+            chatbox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+
+            fetch('/get_response', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `user_input=${userInput}`,
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+                chatbox.scrollTop = chatbox.scrollHeight;
+                if (data.follow_up) {
+                    currentLocation = data.location;
+                    document.getElementById('follow_up_buttons').style.display = 'block';
+                } else {
+                    document.getElementById('follow_up_buttons').style.display = 'none';
+                }
+            });
+        }
+
+        function getForecast(answer) {
+            if (answer === 'yes') {
+                fetch('/get_forecast', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `location=${currentLocation}`,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const chatbox = document.getElementById('chatbox');
+                    chatbox.innerHTML += `<p><strong>Bot:</strong> ${data.response}</p>`;
+                    chatbox.scrollTop = chatbox.scrollHeight;
+                });
+            }
+            document.getElementById('follow_up_buttons').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
